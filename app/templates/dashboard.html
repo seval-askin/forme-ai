@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>FORME | Müşteri Yönetim Paneli</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f4f4f4;
+            color: #111;
+        }
+
+        header {
+            background: #111;
+            color: white;
+            padding: 24px 8%;
+        }
+
+        header h1 {
+            margin: 0;
+            letter-spacing: 3px;
+        }
+
+        main {
+            width: 84%;
+            margin: 45px auto;
+        }
+
+        .ust-alan {
+            margin-bottom: 30px;
+        }
+
+        .ust-alan h2 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .ust-alan p {
+            color: #555;
+            font-size: 17px;
+        }
+
+        .kart {
+            background: white;
+            border-radius: 18px;
+            padding: 28px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+        }
+
+        .kart-baslik {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 22px;
+        }
+
+        .kart-baslik h3 {
+            margin: 0;
+            font-size: 23px;
+        }
+
+        #kayitSayisi {
+            background: #111;
+            color: white;
+            padding: 9px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            background: #f1f1f1;
+            padding: 15px;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        tr:hover {
+            background: #fafafa;
+        }
+
+        #durumMesaji {
+            padding: 20px 0;
+            color: #666;
+        }
+
+        .geri {
+            display: inline-block;
+            margin-top: 25px;
+            color: #111;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        @media (max-width: 800px) {
+            main {
+                width: 94%;
+            }
+
+            .kart {
+                overflow-x: auto;
+            }
+
+            table {
+                min-width: 700px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>FORME</h1>
+</header>
+
+<main>
+
+    <section class="ust-alan">
+        <h2>Müşteri Yönetim Paneli</h2>
+        <p>
+            Akıllı Satış Asistanı üzerinden gelen müşteri taleplerini
+            buradan takip edebilirsin.
+        </p>
+    </section>
+
+    <section class="kart">
+
+        <div class="kart-baslik">
+            <h3>Potansiyel Müşteriler</h3>
+            <span id="kayitSayisi">0 kayıt</span>
+        </div>
+
+        <div id="durumMesaji">
+            Müşteri kayıtları yükleniyor...
+        </div>
+
+        <table id="leadTablosu" style="display:none;">
+            <thead>
+                <tr>
+                    <th>Ad Soyad</th>
+                    <th>Telefon</th>
+                    <th>Talep</th>
+                    <th>Tarih</th>
+                </tr>
+            </thead>
+
+            <tbody id="leadListesi">
+            </tbody>
+        </table>
+
+    </section>
+
+    <a class="geri" href="/">← Akıllı Satış Asistanına Dön</a>
+
+</main>
+
+<script>
+    async function leadleriGetir() {
+
+        const durumMesaji = document.getElementById("durumMesaji");
+        const tablo = document.getElementById("leadTablosu");
+        const liste = document.getElementById("leadListesi");
+        const kayitSayisi = document.getElementById("kayitSayisi");
+
+        try {
+
+            const response = await fetch("/api/leads");
+            const data = await response.json();
+
+            if (!response.ok || !data.basari) {
+                throw new Error("Müşteri kayıtları alınamadı.");
+            }
+
+            const leadler = data.leadler || [];
+
+            kayitSayisi.textContent = leadler.length + " kayıt";
+
+            if (leadler.length === 0) {
+                durumMesaji.textContent = "Henüz müşteri kaydı bulunmuyor.";
+                return;
+            }
+
+            durumMesaji.style.display = "none";
+            tablo.style.display = "table";
+
+            liste.innerHTML = "";
+
+            leadler.forEach(function(lead) {
+
+                const satir = document.createElement("tr");
+
+                const isim = document.createElement("td");
+                isim.textContent = lead.isim || "-";
+
+                const telefon = document.createElement("td");
+                telefon.textContent = lead.telefon || "-";
+
+                const mesaj = document.createElement("td");
+                mesaj.textContent = lead.mesaj || "-";
+
+                const tarih = document.createElement("td");
+                tarih.textContent = lead.tarih || "-";
+
+                satir.appendChild(isim);
+                satir.appendChild(telefon);
+                satir.appendChild(mesaj);
+                satir.appendChild(tarih);
+
+                liste.appendChild(satir);
+            });
+
+        } catch (error) {
+
+            durumMesaji.textContent =
+                "Müşteri kayıtları yüklenirken bir hata oluştu.";
+
+            console.error(error);
+        }
+    }
+
+    leadleriGetir();
+</script>
+
+</body>
+</html>

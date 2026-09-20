@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FORME | Akıllı Satış Asistanı</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            color: #222;
+        }
+
+        header {
+            padding: 24px 8%;
+            background: #111;
+            color: white;
+        }
+
+        header h1 {
+            margin: 0;
+            letter-spacing: 2px;
+        }
+
+        main {
+            width: 90%;
+            max-width: 1100px;
+            margin: 40px auto;
+        }
+
+        .hero {
+            margin-bottom: 30px;
+        }
+
+        .hero h2 {
+            font-size: 34px;
+            margin-bottom: 10px;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid #ddd;
+            border-radius: 18px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+        }
+
+        input,
+        textarea,
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 15px;
+        }
+
+        textarea {
+            min-height: 110px;
+            resize: vertical;
+        }
+
+        button {
+            background: #111;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            opacity: 0.85;
+        }
+
+        #cevapAlani {
+            margin-top: 18px;
+            padding: 15px;
+            min-height: 70px;
+            background: #f7f7f7;
+            border-radius: 8px;
+        }
+
+        #leadDurum {
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        @media (max-width: 750px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>FORME</h1>
+</header>
+
+<main>
+
+    <section class="hero">
+        <h2>Hayalindeki ürünü birlikte şekillendirelim.</h2>
+        <p>
+            Kişiselleştirilmiş giyim ve talep üzerine üretim hakkında
+            FORME Akıllı Satış Asistanı'na sorularını sor.
+        </p>
+    </section>
+
+    <div class="container">
+
+        <!-- Yapay zeka sohbet alani -->
+        <section class="card">
+            <h2>Akıllı Satış Asistanı</h2>
+            <p>Ürünlerimiz ve kişiselleştirme seçenekleri hakkında bize sor.</p>
+
+            <textarea
+                id="mesaj"
+                placeholder="Örneğin: Kişiselleştirilmiş tişört yaptırabilir miyim?"
+            ></textarea>
+
+            <button id="sorButonu" onclick="soruSor()">
+                Sor
+            </button>
+
+            <div id="cevapAlani">
+                Asistanın cevabı burada görünecek.
+            </div>
+        </section>
+
+        <!-- Musteri bilgi formu -->
+        <section class="card">
+            <h2>Seninle İletişime Geçelim</h2>
+
+            <p>
+                Talebinle ilgili sana ulaşabilmemiz için bilgilerini bırak.
+            </p>
+
+            <input
+                id="isim"
+                type="text"
+                placeholder="Ad Soyad"
+            >
+
+            <input
+                id="telefon"
+                type="tel"
+                placeholder="Telefon"
+            >
+
+            <textarea
+                id="talepMesaji"
+                placeholder="Talebini kısaca anlat"
+            ></textarea>
+
+            <button id="kaydetButonu" onclick="leadKaydet()">
+                Kaydet
+            </button>
+
+            <div id="leadDurum"></div>
+        </section>
+
+    </div>
+
+</main>
+
+<script>
+    async function soruSor() {
+        const mesaj = document.getElementById("mesaj").value.trim();
+        const cevapAlani = document.getElementById("cevapAlani");
+
+        if (!mesaj) {
+            cevapAlani.textContent = "Lütfen bir mesaj yazın.";
+            return;
+        }
+
+        cevapAlani.textContent = "FORME Asistan düşünüyor...";
+
+        try {
+            const response = await fetch("/api/sohbet", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    mesaj: mesaj,
+                    gecmis: []
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.basari) {
+                cevapAlani.textContent = data.cevap;
+            } else {
+                cevapAlani.textContent =
+                    data.hata || "Bir hata oluştu.";
+            }
+
+        } catch (error) {
+            cevapAlani.textContent =
+                "Sunucuya bağlanırken bir hata oluştu.";
+        }
+    }
+
+
+    async function leadKaydet() {
+        const isim = document.getElementById("isim").value.trim();
+        const telefon = document.getElementById("telefon").value.trim();
+        const mesaj = document.getElementById("talepMesaji").value.trim();
+        const leadDurum = document.getElementById("leadDurum");
+
+        if (!isim || !telefon) {
+            leadDurum.textContent =
+                "Lütfen ad soyad ve telefon bilgilerini doldurun.";
+            return;
+        }
+
+        try {
+            const response = await fetch("/api/leads", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    isim: isim,
+                    telefon: telefon,
+                    mesaj: mesaj
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.basari) {
+                leadDurum.textContent =
+                    "Bilgilerin başarıyla kaydedildi.";
+
+                document.getElementById("isim").value = "";
+                document.getElementById("telefon").value = "";
+                document.getElementById("talepMesaji").value = "";
+
+            } else {
+                leadDurum.textContent =
+                    data.hata || "Kayıt sırasında bir hata oluştu.";
+            }
+
+        } catch (error) {
+            leadDurum.textContent =
+                "Sunucuya bağlanırken bir hata oluştu.";
+        }
+    }
+</script>
+
+</body>
+</html>
